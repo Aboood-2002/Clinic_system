@@ -1,6 +1,6 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
-
+import { paginate } from '../utils/pagination.js'
 
 
 // CREATE PRESCRIPTION (empty or with meds)
@@ -64,28 +64,32 @@ export const createPrescription = asyncHandler(async (req, res) => {
 // GET ALL PRESCRIPTIONS (list view)
 export const getAllPrescriptions = asyncHandler(async (req, res) => {
   try {
-    const prescriptions = await prisma.prescription.findMany({
-      include: {
-        visit: {
-          include: {
-            patient: { select: { name: true } },
-          },
+    const prescriptions = await paginate(prisma.prescription, {
+    include: {
+      visit: {
+        include: {
+          patient: { select: { name: true } },
         },
-        _count: { select: { medications: true } },
       },
-      orderBy: { prescribedAt: 'desc' },
-    });
+      _count: { select: { medications: true } },
+    },
+    orderBy: { prescribedAt: 'desc' },
+  }, req);
 
-    const formatted = prescriptions.map(p => ({
+  // Optional: format like before
+  const formatted = {
+    data: prescriptions.data.map(p => ({
       id: p.id,
       date: p.prescribedAt,
       patientName: p.visit.patient.name,
       doctorName: p.visit.doctorUsername || 'Dr. Unknown',
       medicationCount: p._count.medications,
       additionalNotes: p.additionalNotes,
-    }));
+    })),
+    pagination: prescriptions.pagination,
+  };
 
-    res.json(formatted);
+  res.json(formatted);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

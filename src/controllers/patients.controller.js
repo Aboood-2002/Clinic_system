@@ -1,5 +1,6 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
+import { paginate } from '../utils/pagination.js'
 
 // CREATE
 export const createPatient = asyncHandler(async (req, res) => {
@@ -11,9 +12,10 @@ export const createPatient = asyncHandler(async (req, res) => {
 
 // READ ALL
 export const getPatients = asyncHandler(async (req, res) => {
-  const patients = await prisma.patient.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
+const patients = await paginate(prisma.patient, {
+    orderBy: { createdAt: 'desc' },
+  }, req);
+
   res.json(patients);
 });
 

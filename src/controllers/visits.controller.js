@@ -1,19 +1,20 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
-
+import { paginate } from '../utils/pagination.js'
 
 
 
 
 export const getAllVisits = asyncHandler(async (req, res) => {
   try {
-    const visits = await prisma.visit.findMany({
-      include: {
-        patient: { select: { name: true, phone: true, age: true, gender: true } },
-      },
-      orderBy: { visitDate: 'desc' },
-    });
-    res.json(visits);
+    const visits = await paginate(prisma.visit, {
+    include: {
+      patient: { select: { name: true, phone: true } },
+    },
+    orderBy: { visitDate: 'desc' },
+  }, req);
+
+  res.json(visits);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
