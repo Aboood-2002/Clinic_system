@@ -4,10 +4,44 @@ import { paginate } from '../utils/pagination.js'
 
 // CREATE
 export const createPatient = asyncHandler(async (req, res) => {
-  const patient = await prisma.patient.create({
-    data: req.body
-  });
-  res.json(patient);
+  const {
+    name,
+    age: rawAge,
+    gender,
+    phone,
+    address,
+    email,
+    bloodType,
+    nationalID,
+  } = req.body;
+
+  // Parse age safely
+  const age = rawAge != null 
+    ? (typeof rawAge === 'string' ? parseInt(rawAge, 10) : rawAge)
+    : null;
+
+  if (age !== null && (isNaN(age) || age < 0 || age > 120)) {
+    return res.status(400).json({ error: 'Invalid age value' });
+  }
+
+  try {
+    const patient = await prisma.patient.create({
+      data: {
+        name,
+        age,                  
+        gender,
+        phone,
+        address,
+        email,
+        bloodType,
+        nationalID,
+      },
+    });
+
+    res.status(201).json(patient);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // READ ALL

@@ -24,6 +24,7 @@ model Patient {
   phone     String  
   bloodType String?
   nationalID String?
+  address  String?
   createdAt DateTime @default(now())
 
   queues    Queue[]
