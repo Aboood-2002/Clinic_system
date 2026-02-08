@@ -1,20 +1,36 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
-import { paginate } from '../utils/pagination.js'
 
 
 
 
 export const getAllVisits = asyncHandler(async (req, res) => {
   try {
-    const visits = await paginate(prisma.visit, {
-    include: {
-      patient: { select: { name: true, phone: true } },
-    },
-    orderBy: { visitDate: 'desc' },
-  }, req);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-  res.json(visits);
+    const [visits, total] = await Promise.all([
+      prisma.visit.findMany({
+        include: {
+          patient: { select: { name: true, phone: true, age: true, gender: true } },
+        },
+        orderBy: { visitDate: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.visit.count(),
+    ]);
+
+    res.json({
+      data: visits,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -99,6 +115,24 @@ export const deleteVisit = asyncHandler(async (req, res) => {
 
 
 
+
+// ---Later---
+// GET visits for a patient
+// router.get('/patient/:patientId', authenticate, async (req, res) => {
+//   const { patientId } = req.params;
+//   try {
+//     const visits = await prisma.visit.findMany({
+//       where: { patientId: parseInt(patientId) },
+//       include: {
+//         prescriptions: { include: { medications: true } },
+//       },
+//       orderBy: { visitDate: 'desc' },
+//     });
+//     res.json(visits);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // ---Later---
 // GET visits for a patient
