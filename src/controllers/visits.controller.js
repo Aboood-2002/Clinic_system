@@ -134,20 +134,3 @@ export const deleteVisit = asyncHandler(async (req, res) => {
 //   }
 // });
 
-// ---Later---
-// GET visits for a patient
-// router.get('/patient/:patientId', authenticate, async (req, res) => {
-//   const { patientId } = req.params;
-//   try {
-//     const visits = await prisma.visit.findMany({
-//       where: { patientId: parseInt(patientId) },
-//       include: {
-//         prescriptions: { include: { medications: true } },
-//       },
-//       orderBy: { visitDate: 'desc' },
-//     });
-//     res.json(visits);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
