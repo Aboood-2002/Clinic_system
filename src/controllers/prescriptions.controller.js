@@ -1,6 +1,6 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
-import { paginate } from '../utils/pagination.js'
+
 
 
 // CREATE PRESCRIPTION (empty or with meds)
@@ -61,35 +61,85 @@ export const createPrescription = asyncHandler(async (req, res) => {
   }
 });
 
-// GET ALL PRESCRIPTIONS (list view)
+// GET ALL PRESCRIPTIONS (list view) with pagination
 export const getAllPrescriptions = asyncHandler(async (req, res) => {
   try {
-    const prescriptions = await paginate(prisma.prescription, {
-    include: {
-      visit: {
-        include: {
-          patient: { select: { name: true } },
-        },
-      },
-      _count: { select: { medications: true } },
-    },
-    orderBy: { prescribedAt: 'desc' },
-  }, req);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-  // Optional: format like before
-  const formatted = {
-    data: prescriptions.data.map(p => ({
+    const [prescriptions, total] = await Promise.all([
+      prisma.prescription.findMany({
+        include: {
+          visit: {
+            include: {
+              patient: { select: { name: true } },
+            },
+          },
+          _count: { select: { medications: true } },
+        },
+        orderBy: { prescribedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.prescription.count(),
+    ]);
+
+    const formatted = prescriptions.map(p => ({
       id: p.id,
       date: p.prescribedAt,
       patientName: p.visit.patient.name,
       doctorName: p.visit.doctorUsername || 'Dr. Unknown',
       medicationCount: p._count.medications,
       additionalNotes: p.additionalNotes,
-    })),
-    pagination: prescriptions.pagination,
-  };
+    }));
 
-  res.json(formatted);
+    res.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET PATIENT PRESCRIPTIONS (by patient ID)
+export const getPatientPrescriptions = asyncHandler(async (req, res) => {
+  try {
+    const patientId = parseInt(req.params.patientId);
+
+    const prescriptions = await prisma.prescription.findMany({
+      where: {
+        visit: {
+          patientId: patientId,
+        },
+      },
+      include: {
+        visit: {
+          include: {
+            patient: { select: { name: true } },
+          },
+        },
+        _count: { select: { medications: true } },
+      },
+      orderBy: { prescribedAt: 'desc' },
+    });
+
+    const formatted = prescriptions.map(p => ({
+      id: p.id,
+      date: p.prescribedAt,
+      patientName: p.visit.patient.name,
+      doctorName: p.visit.doctorUsername || 'Dr. Unknown',
+      medicationCount: p._count.medications,
+      additionalNotes: p.additionalNotes,
+    }));
+
+    res.json(formatted);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
