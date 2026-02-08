@@ -7,4 +7,5 @@ export const addToQueueSchema = Joi.object({
   }),
   reason: Joi.string().max(200).optional().allow(''),
   priority: Joi.string().valid('normal', 'high', 'urgent').default('normal'),
+  visitType: Joi.string().valid('consultation', 'examination').default('consultation'),
 });

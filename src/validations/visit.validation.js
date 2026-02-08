@@ -5,4 +5,5 @@ export const updateVisitSchema = Joi.object({
   diagnosis: Joi.string().max(500).optional().allow(''),
   notes: Joi.string().max(1000).optional().allow(''),
   status: Joi.string().valid('pending', 'in_progress', 'completed', 'cancelled').optional(),
+  visitType: Joi.string().valid('consultation', 'examination').optional(),
 });

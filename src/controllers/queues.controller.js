@@ -4,7 +4,7 @@ import { io } from '../socket/socket.js';
 
 
 export const addToQueue = asyncHandler(async (req, res) => {
-  const { patientId, reason, priority = 'normal' } = req.body;
+  const { patientId, reason, priority = 'normal', visitType = 'examination' } = req.body;
 
   if (!patientId) {
     return res.status(400).json({ error: 'patientId is required' });
@@ -13,6 +13,11 @@ export const addToQueue = asyncHandler(async (req, res) => {
   const validPriorities = ['normal', 'high', 'urgent'];
   if (!validPriorities.includes(priority)) {
     return res.status(400).json({ error: 'Invalid priority' });
+  }
+
+  const validVisitTypes = ['consultation', 'examination'];
+  if (!validVisitTypes.includes(visitType)) {
+    return res.status(400).json({ error: 'Invalid visitType' });
   }
 
   try {
@@ -44,6 +49,7 @@ export const addToQueue = asyncHandler(async (req, res) => {
           doctorUsername: "Dr. Ahmed Hassan",
           status: 'pending',
           chiefComplaint: reason || null,
+          visitType,
         },
       });
 

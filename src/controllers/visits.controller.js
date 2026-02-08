@@ -65,7 +65,7 @@ export const getVisit = asyncHandler(async (req, res) => {
 
 export const updateAVisit = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { chiefComplaint, diagnosis, notes, status } = req.body;
+  const { chiefComplaint, diagnosis, notes, status, visitType } = req.body;
 
   try {
     const updatedVisit = await prisma.visit.update({
@@ -75,6 +75,7 @@ export const updateAVisit = asyncHandler(async (req, res) => {
         diagnosis,
         notes,
         status: status || 'completed',
+        visitType,
       },
       include: {
         patient: { 

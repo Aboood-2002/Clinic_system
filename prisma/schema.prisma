@@ -46,11 +46,17 @@ model Queue {
   @@index([queuedAt])
 }
 
+enum VisitType {
+  consultation
+  examination
+}
+
 model Visit {
   id             Int      @id @default(autoincrement())
   patient        Patient  @relation(fields: [patientId], references: [id])
   patientId      Int
   doctorUsername String?   // NEW: Stores doctor's name like "Dr. Ahmed Hassan"
+  visitType      VisitType @default(consultation)
   chiefComplaint String?
   diagnosis      String?
   notes          String?
