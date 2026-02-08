@@ -1,6 +1,5 @@
 import prisma from '../prismaClient.js';
 import asyncHandler from 'express-async-handler'
-import { paginate } from '../utils/pagination.js'
 
 // CREATE
 export const createPatient = asyncHandler(async (req, res) => {
@@ -20,7 +19,7 @@ export const createPatient = asyncHandler(async (req, res) => {
     ? (typeof rawAge === 'string' ? parseInt(rawAge, 10) : rawAge)
     : null;
 
-  if (age !== null && (isNaN(age) || age < 0 || age > 120)) {
+  if (age !== null && (isNaN(age)  age < 0  age > 120)) {
     return res.status(400).json({ error: 'Invalid age value' });
   }
 
@@ -44,13 +43,30 @@ export const createPatient = asyncHandler(async (req, res) => {
   }
 });
 
-// READ ALL
+// READ ALL with pagination
 export const getPatients = asyncHandler(async (req, res) => {
-const patients = await paginate(prisma.patient, {
-    orderBy: { createdAt: 'desc' },
-  }, req);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
 
-  res.json(patients);
+  const [patients, total] = await Promise.all([
+    prisma.patient.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.patient.count(),
+  ]);
+
+  res.json({
+    data: patients,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 // READ ONE
