@@ -75,6 +75,7 @@ model Prescription {
   visit        Visit        @relation(fields: [visitId], references: [id])
   visitId      Int
   additionalNotes String?   // NEW: For "Additional Notes"
+  consultationDate DateTime @default(now())
   prescribedAt DateTime     @default(now())
 
   medications  Medication[] // One-to-many

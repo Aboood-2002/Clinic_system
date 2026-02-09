@@ -5,7 +5,7 @@ import asyncHandler from 'express-async-handler'
 
 // CREATE PRESCRIPTION (empty or with meds)
 export const createPrescription = asyncHandler(async (req, res) => {
-  const { visitId, additionalNotes, medications } = req.body;
+  const { visitId, additionalNotes, medications, consultationDate } = req.body;
 
   // Allow empty medications (doctor can add later)
   if (!visitId) {
@@ -17,6 +17,7 @@ export const createPrescription = asyncHandler(async (req, res) => {
       data: {
         visitId,
         additionalNotes: additionalNotes || null,
+        consultationDate: consultationDate ? new Date(consultationDate) : undefined,
         medications: medications && medications.length > 0
           ? {
               create: medications.map(med => ({
@@ -87,7 +88,8 @@ export const getAllPrescriptions = asyncHandler(async (req, res) => {
 
     const formatted = prescriptions.map(p => ({
       id: p.id,
-      date: p.prescribedAt,
+      date: p.consultationDate,
+      consultationDate: p.consultationDate,
       patientName: p.visit.patient.name,
       doctorName: p.visit.doctorUsername || 'Dr. Unknown',
       medicationCount: p._count.medications,
@@ -132,7 +134,8 @@ export const getPatientPrescriptions = asyncHandler(async (req, res) => {
 
     const formatted = prescriptions.map(p => ({
       id: p.id,
-      date: p.prescribedAt,
+      date: p.consultationDate,
+      consultationDate: p.consultationDate,
       patientName: p.visit.patient.name,
       doctorName: p.visit.doctorUsername || 'Dr. Unknown',
       medicationCount: p._count.medications,
@@ -186,7 +189,7 @@ export const getPrescription = asyncHandler(async (req, res) => {
 
 // UPDATE PRESCRIPTION
 export const updatePrescription = asyncHandler(async (req, res) => {
-  const { additionalNotes, medications } = req.body;
+  const { additionalNotes, medications, consultationDate } = req.body;
 
   try {
     // Delete old medications
@@ -198,6 +201,7 @@ export const updatePrescription = asyncHandler(async (req, res) => {
       where: { id: parseInt(req.params.id) },
       data: {
         additionalNotes: additionalNotes || null,
+        consultationDate: consultationDate ? new Date(consultationDate) : undefined,
         medications: medications && medications.length > 0
           ? { create: medications }
           : undefined,

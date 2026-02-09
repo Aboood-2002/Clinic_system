@@ -11,6 +11,7 @@ const medicationSchema = Joi.object({
 export const createPrescriptionSchema = Joi.object({
   visitId: Joi.number().integer().positive().required(),
   additionalNotes: Joi.string().max(1000).optional().allow(''),
+  consultationDate: Joi.date().iso().optional(),
   medications: Joi.array().items(medicationSchema).min(1).required().messages({
     'array.min': 'At least one medication is required',
   }),
